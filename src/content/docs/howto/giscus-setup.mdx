@@ -1,0 +1,137 @@
+---
+title: giscusの設定方法
+description: GitHub Discussionsを使ったコメント機能giscusの導入手順
+sidebar:
+  order: 5
+---
+
+giscusは、GitHub Discussionsをバックエンドとして利用するコメントシステムです。
+
+---
+
+## 前提条件
+
+- GitHubアカウントを持っていること
+- 対象リポジトリがpublicであること
+- リポジトリの管理権限があること
+
+---
+
+## 手順1: GitHub Discussionsを有効化
+
+1. GitHubリポジトリページを開く
+2. **Settings** タブをクリック
+3. 左サイドバーの **General** を選択
+4. **Features** セクションまでスクロール
+5. **Discussions** にチェックを入れる
+
+---
+
+## 手順2: giscusアプリをインストール
+
+1. [giscus app](https://github.com/apps/giscus) にアクセス
+2. **Install** をクリック
+3. インストール先のリポジトリを選択
+   - **Only select repositories** で対象リポジトリを選ぶ
+4. **Install** で完了
+
+---
+
+## 手順3: giscus設定ページで設定値を取得
+
+1. [giscus.app](https://giscus.app/ja) にアクセス
+2. 以下を入力・選択:
+
+### リポジトリ
+
+```
+username/repository-name
+```
+
+例: `shibaleo/slidoc`
+
+### ページとDiscussionのマッピング
+
+推奨: **pathname** を選択
+
+URLのパスに基づいてDiscussionが作成されます。
+
+### Discussionカテゴリ
+
+**Announcements** を推奨（スパム防止のため）
+
+---
+
+## 手順4: 生成されたコードを確認
+
+設定が完了すると、以下のような値が生成されます:
+
+```
+data-repo="username/repository-name"
+data-repo-id="R_xxxxxxxx"
+data-category="Announcements"
+data-category-id="DIC_xxxxxxxx"
+```
+
+これらの値をコピーしておきます。
+
+---
+
+## 手順5: Astroコンポーネントに設定
+
+`src/components/Giscus.astro` を編集:
+
+```astro
+<script
+  src="https://giscus.app/client.js"
+  data-repo="your-username/your-repo"
+  data-repo-id="YOUR_REPO_ID"
+  data-category="Announcements"
+  data-category-id="YOUR_CATEGORY_ID"
+  data-mapping="pathname"
+  data-strict="0"
+  data-reactions-enabled="1"
+  data-emit-metadata="0"
+  data-input-position="bottom"
+  data-theme="preferred_color_scheme"
+  data-lang="ja"
+  crossorigin="anonymous"
+  async
+></script>
+```
+
+---
+
+## テーマの設定
+
+`data-theme` オプション:
+
+- `light` - 常にライトテーマ
+- `dark` - 常にダークテーマ
+- `preferred_color_scheme` - システム設定に従う
+- `dark_dimmed` - 暗めのダークテーマ
+
+---
+
+## トラブルシューティング
+
+### コメント欄が表示されない
+
+- リポジトリがpublicか確認
+- giscusアプリがインストールされているか確認
+- repo-idとcategory-idが正しいか確認
+
+### 「giscus is not installed」エラー
+
+giscusアプリを再インストールしてください。
+
+---
+
+## まとめ
+
+1. Discussionsを有効化
+2. giscusアプリをインストール
+3. giscus.appで設定値を取得
+4. コンポーネントに設定値を反映
+
+設定が完了すると、記事ページの下部にコメント欄が表示されます。

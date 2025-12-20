@@ -1,0 +1,86 @@
+---
+interface Props {
+  title: string;
+  url: string;
+}
+
+const { title, url } = Astro.props;
+const encodedTitle = encodeURIComponent(title);
+const encodedUrl = encodeURIComponent(url);
+---
+
+<div class="share-buttons">
+  <span class="share-label">Share:</span>
+  <a
+    href={`https://twitter.com/intent/tweet?text=${encodedTitle}&url=${encodedUrl}`}
+    target="_blank"
+    rel="noopener noreferrer"
+    class="share-button share-x"
+    title="Share on X"
+  >
+    𝕏
+  </a>
+  <button
+    class="share-button share-copy"
+    data-url={url}
+    title="Copy link"
+  >
+    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+      <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+    </svg>
+  </button>
+</div>
+
+<script>
+  document.querySelectorAll('.share-copy').forEach(button => {
+    button.addEventListener('click', async () => {
+      const url = button.getAttribute('data-url');
+      if (url) {
+        await navigator.clipboard.writeText(url);
+        const originalTitle = button.getAttribute('title');
+        button.setAttribute('title', 'Copied!');
+        setTimeout(() => {
+          button.setAttribute('title', originalTitle || 'Copy link');
+        }, 2000);
+      }
+    });
+  });
+</script>
+
+<style>
+  .share-buttons {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .share-label {
+    font-size: 0.875rem;
+    color: var(--sl-color-gray-3);
+  }
+
+  .share-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border: 1px solid var(--sl-color-gray-5);
+    border-radius: 4px;
+    background: transparent;
+    color: var(--sl-color-text);
+    text-decoration: none;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s;
+  }
+
+  .share-button:hover {
+    background: var(--sl-color-gray-6);
+    border-color: var(--sl-color-gray-4);
+  }
+
+  .share-x {
+    font-weight: bold;
+  }
+</style>

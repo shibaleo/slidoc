@@ -1,0 +1,89 @@
+---
+title: はじめに
+description: Slidocのインストールと初期設定
+sidebar:
+  order: 1
+---
+
+Slidocを使って、ドキュメントとスライドを同時に作成する方法を説明します。
+
+---
+
+## 必要な環境
+
+- Node.js 18以上
+- npm または yarn
+- Git
+
+---
+
+## インストール
+
+### 1. リポジトリをクローン
+
+```bash
+git clone https://github.com/shibaleo/slidoc.git
+cd slidoc
+```
+
+---
+
+### 2. 依存関係をインストール
+
+```bash
+npm install
+```
+
+---
+
+### 3. 開発サーバーを起動
+
+```bash
+npm run dev
+```
+
+ブラウザで http://localhost:4321 を開きます。
+
+---
+
+## ディレクトリ構成
+
+```
+slidoc/
+├── src/
+│   ├── content/docs/     # 記事ファイル
+│   │   ├── howto/         # 使い方
+│   │   └── tech/         # 技術解説
+│   ├── components/       # カスタムコンポーネント
+│   └── pages/present/    # プレゼンモード
+├── astro.config.mjs      # Astro設定
+└── package.json
+```
+
+---
+
+## 次のステップ
+
+- [記事の書き方](/tech/writing-articles/) - 記事の作成方法
+- [スライド記法](/tech/slide-syntax/) - スライドの区切り方
+- [カスタマイズ](/tech/customization/) - サイト設定の変更
+
+---
+
+## デプロイ
+
+### Vercel（推奨）
+
+1. GitHubにリポジトリをプッシュ
+2. [Vercel](https://vercel.com) でリポジトリをインポート
+3. デフォルト設定のままデプロイ
+
+---
+
+### その他のホスティング
+
+```bash
+npm run build
+```
+
+`dist/` フォルダを任意のホスティングサービスにデプロイします。

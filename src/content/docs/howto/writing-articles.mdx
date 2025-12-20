@@ -1,0 +1,131 @@
+---
+title: 記事の書き方
+description: Slidocで記事を作成する方法
+sidebar:
+  order: 2
+---
+
+Slidocでは、MDXファイルを使って記事を作成します。
+
+---
+
+## ファイルの作成場所
+
+記事は `src/content/docs/` 以下に配置します。
+
+```
+src/content/docs/
+├── tech/          # 使い方ドキュメント
+│   └── my-post.mdx
+├── dev/           # Slidocの技術解説
+│   └── my-post.mdx
+└── about.mdx      # Aboutページ
+```
+
+---
+
+## 基本構造
+
+各記事には frontmatter が必要です。
+
+```markdown
+---
+title: 記事のタイトル
+description: 記事の説明文
+---
+
+ここから本文を書きます。
+```
+
+---
+
+## frontmatter オプション
+
+| プロパティ | 必須 | 説明 |
+|-----------|------|------|
+| title | ✓ | 記事タイトル |
+| description | ✓ | 記事の説明（SEO用） |
+| template | | `splash` でトップページ風 |
+
+---
+
+## Markdown記法
+
+通常のMarkdownが使えます。
+
+### 見出し
+
+```markdown
+## 見出し2
+### 見出し3
+#### 見出し4
+```
+
+---
+
+### リスト
+
+```markdown
+- 箇条書き1
+- 箇条書き2
+
+1. 番号付き1
+2. 番号付き2
+```
+
+---
+
+### コードブロック
+
+````markdown
+```javascript
+const hello = "world";
+console.log(hello);
+```
+````
+
+シンタックスハイライトが適用されます。
+
+---
+
+### リンクと画像
+
+```markdown
+[リンクテキスト](https://example.com)
+
+![代替テキスト](/images/photo.jpg)
+```
+
+---
+
+## スライドの区切り
+
+`---`（水平線）でスライドを区切ります。
+
+```markdown
+## スライド1の内容
+
+ここに本文...
+
+---
+
+## スライド2の内容
+
+次のスライド...
+```
+
+詳細は [スライド記法](/tech/slide-syntax/) を参照してください。
+
+---
+
+## プレビュー
+
+開発サーバーを起動して確認します。
+
+```bash
+npm run dev
+```
+
+ブラウザで確認:
+- ドキュメント: `http://localhost:4321/tech/my-post/`
+- スライド: `http://localhost:4321/present/tech/my-post/`

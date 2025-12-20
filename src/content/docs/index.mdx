@@ -1,0 +1,32 @@
+---
+title: Slidoc
+description: 考えを広めるためのドキュメント＆スライドサイト
+template: splash
+hero:
+  tagline: ドキュメンテーションとプレゼンテーションを統合したブログテンプレート
+  actions:
+    - text: How to Use
+      link: /howto/
+      icon: right-arrow
+    - text: Technology
+      link: /tech/
+      icon: right-arrow
+      variant: minimal
+---
+
+import { Card, CardGrid } from '@astrojs/starlight/components';
+
+## カテゴリ
+
+<CardGrid>
+  <a href="/howto/" style="text-decoration: none; color: inherit;">
+    <Card title="How to Use" icon="heart">
+      このブログテンプレートの使い方。
+    </Card>
+  </a>
+  <a href="/tech/" style="text-decoration: none; color: inherit;">
+    <Card title="Technology" icon="laptop">
+      このリポジトリの技術解説。
+    </Card>
+  </a>
+</CardGrid>

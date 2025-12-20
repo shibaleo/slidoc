@@ -1,0 +1,187 @@
+---
+title: カスタマイズ
+description: Slidocのサイト設定とカスタマイズ方法
+sidebar:
+  order: 4
+---
+
+Slidocをあなたのプロジェクトに合わせてカスタマイズする方法を説明します。
+
+---
+
+## サイト情報の変更
+
+`astro.config.mjs` を編集します。
+
+```javascript
+starlight({
+  title: 'Your Site Name',
+  site: 'https://your-domain.com',
+  // ...
+})
+```
+
+---
+
+## サイドバーの設定
+
+`astro.config.mjs` の `sidebar` セクション:
+
+```javascript
+sidebar: [
+  {
+    label: 'カテゴリ名',
+    autogenerate: { directory: 'tech' },
+  },
+  {
+    label: '別カテゴリ',
+    items: [
+      { label: '記事1', link: '/path/to/article' },
+    ],
+  },
+],
+```
+
+---
+
+## ソーシャルリンク
+
+```javascript
+social: [
+  { icon: 'github', label: 'GitHub', href: 'https://github.com/username' },
+  { icon: 'x.com', label: 'X', href: 'https://x.com/username' },
+],
+```
+
+---
+
+## giscus（コメント機能）
+
+`src/components/Giscus.astro` を編集:
+
+```astro
+<script
+  src="https://giscus.app/client.js"
+  data-repo="your-username/your-repo"
+  data-repo-id="YOUR_REPO_ID"
+  data-category="Announcements"
+  data-category-id="YOUR_CATEGORY_ID"
+  ...
+></script>
+```
+
+詳細は [giscusの設定方法](/tech/giscus-setup/) を参照。
+
+---
+
+## テーマ
+
+Starlightのテーマプラグインを使用しています。
+
+`astro.config.mjs`:
+
+```javascript
+import starlightThemeNext from 'starlight-theme-next';
+
+starlight({
+  plugins: [starlightThemeNext()],
+  // ...
+})
+```
+
+---
+
+## カスタムCSS
+
+`src/styles/custom.css` を作成して追加スタイルを定義できます。
+
+```css
+:root {
+  --sl-color-accent: #your-color;
+}
+```
+
+---
+
+## スライドのスタイル
+
+プレゼンモードのスタイルは `src/pages/present/[...slug].astro` 内の `<style>` で定義されています。
+
+主要なCSS変数:
+
+```css
+:root {
+  --r-background-color: #0a0a0a;
+  --r-main-color: #b4b4b4;
+  --r-heading-color: #fff;
+}
+```
+
+---
+
+## 新しいカテゴリの追加
+
+1. `src/content/docs/` に新しいフォルダを作成
+
+```
+src/content/docs/
+├── howto/
+├── tech/
+└── new-category/   # 新規追加
+```
+
+---
+
+2. `astro.config.mjs` のサイドバーに追加
+
+```javascript
+sidebar: [
+  {
+    label: '新カテゴリ',
+    autogenerate: { directory: 'new-category' },
+  },
+],
+```
+
+---
+
+## ファビコン
+
+`public/favicon.svg` を差し替えます。
+
+---
+
+## デプロイ設定
+
+### Vercel
+
+特別な設定は不要です。
+
+### Netlify
+
+`netlify.toml` を作成:
+
+```toml
+[build]
+  command = "npm run build"
+  publish = "dist"
+```
+
+---
+
+## 環境変数
+
+必要に応じて `.env` ファイルを作成:
+
+```
+PUBLIC_SITE_URL=https://your-domain.com
+```
+
+---
+
+## まとめ
+
+1. `astro.config.mjs` - サイト情報、サイドバー
+2. `src/components/Giscus.astro` - コメント設定
+3. `src/styles/custom.css` - カスタムスタイル
+4. `public/` - 静的ファイル

@@ -1,0 +1,34 @@
+---
+import type { Props } from '@astrojs/starlight/props';
+import Default from '@astrojs/starlight/components/MarkdownContent.astro';
+import BottomBar from './BottomBar.astro';
+
+// URLからslugを取得
+const pathname = Astro.url.pathname;
+const slug = pathname.replace(/^\//, '').replace(/\/$/, '');
+
+// Starlightのpropsからtitleを取得
+const { entry } = Astro.props as any;
+const title = entry?.data?.title || '';
+
+// splashテンプレートとindexページでは非表示
+const isSplash = entry?.data?.template === 'splash';
+const isIndex = slug === '' || slug === 'index' || slug.endsWith('/index');
+const showBottomBar = !isSplash && !isIndex && slug;
+---
+
+<Default {...Astro.props}>
+  <slot />
+</Default>
+
+{showBottomBar && (
+  <div class="bottom-bar-wrapper">
+    <BottomBar title={title} slug={slug} />
+  </div>
+)}
+
+<style>
+  .bottom-bar-wrapper {
+    margin-top: 2rem;
+  }
+</style>

@@ -1,0 +1,246 @@
+---
+import fs from 'node:fs';
+import path from 'node:path';
+import { marked } from 'marked';
+
+export async function getStaticPaths() {
+  const docsDir = path.join(process.cwd(), 'src/content/docs');
+  const paths: { params: { slug: string }; props: { filePath: string; title: string } }[] = [];
+
+  function scanDir(dir: string, prefix: string = '') {
+    const files = fs.readdirSync(dir);
+    for (const file of files) {
+      const fullPath = path.join(dir, file);
+      const stat = fs.statSync(fullPath);
+      if (stat.isDirectory()) {
+        scanDir(fullPath, prefix ? `${prefix}/${file}` : file);
+      } else if (file.endsWith('.mdx') || file.endsWith('.md')) {
+        const slug = prefix ? `${prefix}/${file.replace(/\.(mdx?|md)$/, '')}` : file.replace(/\.(mdx?|md)$/, '');
+        // Skip root index only
+        if (slug === 'index') continue;
+        paths.push({
+          params: { slug },
+          props: { filePath: fullPath, title: slug },
+        });
+      }
+    }
+  }
+
+  scanDir(docsDir);
+  return paths;
+}
+
+const { filePath, title: slugTitle } = Astro.props;
+const slug = Astro.params.slug;
+
+// Read file content
+const content = fs.readFileSync(filePath, 'utf-8');
+
+// Parse frontmatter
+const frontmatterMatch = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n([\s\S]*)$/);
+let title = slugTitle;
+let description = '';
+let body = content;
+
+if (frontmatterMatch) {
+  const frontmatter = frontmatterMatch[1];
+  body = frontmatterMatch[2];
+  const titleMatch = frontmatter.match(/title:\s*["']?([^"'\n]+)["']?/);
+  const descMatch = frontmatter.match(/description:\s*["']?([^"'\n]+)["']?/);
+  if (titleMatch) title = titleMatch[1];
+  if (descMatch) description = descMatch[1];
+}
+
+// Normalize line endings and remove import statements and JSX components
+body = body
+  .replace(/\r\n/g, '\n')
+  .replace(/^import\s+.*$/gm, '')
+  .replace(/<[A-Z][a-zA-Z]*[^>]*>[\s\S]*?<\/[A-Z][a-zA-Z]*>/g, '')
+  .replace(/<[A-Z][a-zA-Z]*[^>]*\/>/g, '')
+  .trim();
+
+// Protect code blocks from slide splitting
+const codeBlockPlaceholder = '___CODE_BLOCK___';
+const codeBlocks: string[] = [];
+body = body.replace(/```[\s\S]*?```/g, (match) => {
+  codeBlocks.push(match);
+  return codeBlockPlaceholder + (codeBlocks.length - 1);
+});
+
+// Split by horizontal rule (---) - must be on its own line
+let slides = body.split(/\n---\n/).map(slide => slide.trim()).filter(s => s);
+
+// Restore code blocks
+slides = slides.map(slide => {
+  return slide.replace(new RegExp(codeBlockPlaceholder + '(\\d+)', 'g'), (_, index) => {
+    return codeBlocks[parseInt(index)];
+  });
+});
+
+// Debug: log slide count
+console.log(`[Slidoc] ${slug}: ${slides.length} slides found`);
+
+// Convert each slide's markdown to HTML
+const slidesHtml = await Promise.all(
+  slides.map(async (slide) => {
+    if (!slide) return '';
+    return marked.parse(slide);
+  })
+);
+
+const filteredSlidesHtml = slidesHtml.filter(html => html.trim());
+// tech/index -> /tech/, about -> /about/
+const docSlug = slug.endsWith('/index') ? slug.replace(/\/index$/, '') : slug;
+const docUrl = `/${docSlug}/`;
+---
+
+<!DOCTYPE html>
+<html lang="ja" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{title} - プレゼンモード | Slidoc</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reset.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/theme/black.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/highlight/monokai.css">
+  <script is:inline>
+    (function() {
+      const theme = localStorage.getItem('starlight-theme') ||
+        (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark');
+      document.documentElement.setAttribute('data-theme', theme);
+    })();
+  </script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@400;500;700&display=swap');
+
+    /* Dark theme (default) */
+    :root {
+      --r-background-color: #0a0a0a;
+      --r-main-color: #b4b4b4;
+      --r-heading-color: #fff;
+      --btn-bg: rgba(255, 255, 255, 0.1);
+      --btn-border: rgba(255, 255, 255, 0.2);
+      --btn-bg-hover: rgba(255, 255, 255, 0.2);
+      --btn-border-hover: rgba(255, 255, 255, 0.4);
+      --btn-color: #fff;
+    }
+
+    /* Light theme */
+    [data-theme='light'] {
+      --r-background-color: #f8f9fa;
+      --r-main-color: #333;
+      --r-heading-color: #111;
+      --btn-bg: rgba(0, 0, 0, 0.1);
+      --btn-border: rgba(0, 0, 0, 0.2);
+      --btn-bg-hover: rgba(0, 0, 0, 0.2);
+      --btn-border-hover: rgba(0, 0, 0, 0.4);
+      --btn-color: #333;
+    }
+
+    body {
+      background: var(--r-background-color);
+    }
+    .back-button {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      z-index: 1000;
+      width: 48px;
+      height: 48px;
+      background: var(--btn-bg);
+      color: var(--btn-color);
+      border-radius: 50%;
+      text-decoration: none;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid var(--btn-border);
+      transition: all 0.2s;
+      backdrop-filter: blur(8px);
+    }
+    .back-button:hover {
+      background: var(--btn-bg-hover);
+      border-color: var(--btn-border-hover);
+      transform: scale(1.05);
+    }
+    .reveal-viewport {
+      background: var(--r-background-color);
+    }
+    .reveal {
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+    .reveal h1, .reveal h2, .reveal h3, .reveal h4 {
+      font-family: 'Noto Sans JP', sans-serif;
+    }
+    .reveal pre {
+      width: 100%;
+      font-size: 0.8em;
+    }
+    .reveal pre code {
+      max-height: 500px;
+      padding: 1em;
+    }
+    .reveal ul, .reveal ol {
+      display: block;
+      text-align: left;
+      margin-left: 1em;
+    }
+    .reveal li {
+      margin-bottom: 0.5em;
+    }
+    .reveal section {
+      text-align: left;
+    }
+    .reveal p {
+      line-height: 1.8;
+    }
+    .reveal a {
+      color: #3b82f6;
+    }
+    /* Scroll view styles */
+    .reveal .slides section {
+      min-height: 100vh;
+      padding: 80px 60px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: flex-start;
+    }
+    .reveal .slides section h2 {
+      text-align: center;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <a href={docUrl} class="back-button" title="記事に戻る">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M17.77 3.77 16 2 6 12l10 10 1.77-1.77L9.54 12z"/>
+    </svg>
+  </a>
+
+  <div class="reveal">
+    <div class="slides">
+      {filteredSlidesHtml.map((html) => (
+        <section set:html={html} />
+      ))}
+    </div>
+  </div>
+
+  <script is:inline src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.js"></script>
+  <script is:inline src="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/highlight/highlight.js"></script>
+  <script is:inline>
+    Reveal.initialize({
+      hash: true,
+      view: 'scroll',
+      scrollProgress: 'auto',
+      scrollIndicators: true,
+      center: true,
+      plugins: [RevealHighlight]
+    });
+  </script>
+</body>
+</html>

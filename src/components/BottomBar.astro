@@ -1,0 +1,84 @@
+---
+import ShareButtons from './ShareButtons.astro';
+import Giscus from './Giscus.astro';
+
+interface Props {
+  title: string;
+  slug: string;
+}
+
+const { title, slug } = Astro.props;
+const siteUrl = 'https://slidoc.vercel.app';
+const pageUrl = `${siteUrl}/${slug}/`;
+
+// カテゴリindexページの場合は /present/tech/index/ のようにする
+const isCategory = slug && !slug.includes('/');
+const presentSlug = isCategory ? `${slug}/index` : slug;
+const presentUrl = `/present/${presentSlug}/`;
+
+// index ページはプレゼンモードリンクを表示しない
+const showPresentLink = slug !== '';
+---
+
+<div class="bottom-bar">
+  <div class="share-container">
+    <ShareButtons title={title} url={pageUrl} />
+  </div>
+
+  <Giscus />
+</div>
+
+{showPresentLink && (
+  <a href={presentUrl} class="present-fab" title="プレゼンモードで開く">
+    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M18 4v5H6V4h12m0-2H6c-1.1 0-2 .9-2 2v5c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 13v5H6v-5h12m0-2H6c-1.1 0-2 .9-2 2v5c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-5c0-1.1-.9-2-2-2z"/>
+    </svg>
+  </a>
+)}
+
+<style>
+  .bottom-bar {
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--sl-color-gray-5);
+  }
+
+  .share-container {
+    margin-bottom: 1.5rem;
+  }
+
+  .present-fab {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 1000;
+    width: 48px;
+    height: 48px;
+    background: rgba(0, 0, 0, 0.1);
+    color: var(--sl-color-text);
+    border-radius: 50%;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid rgba(0, 0, 0, 0.2);
+    transition: all 0.2s;
+    backdrop-filter: blur(8px);
+  }
+
+  .present-fab:hover {
+    background: rgba(0, 0, 0, 0.2);
+    border-color: rgba(0, 0, 0, 0.4);
+    transform: scale(1.05);
+  }
+
+  :global([data-theme='dark']) .present-fab {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  :global([data-theme='dark']) .present-fab:hover {
+    background: rgba(255, 255, 255, 0.2);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+</style>

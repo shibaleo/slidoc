@@ -1,0 +1,79 @@
+---
+title: テーマ連動
+description: ダークモード同期の実装
+---
+
+## 概要
+
+Slidocはドキュメントモードとスライドモードでテーマを同期します。
+
+---
+
+## Starlightのテーマ管理
+
+Starlightは`localStorage`の`starlight-theme`キーでテーマを管理。
+
+- `light` - ライトテーマ
+- `dark` - ダークテーマ
+- 未設定 - システム設定に従う
+
+---
+
+## スライドモードでの同期
+
+### テーマ検出スクリプト
+
+```javascript
+(function() {
+  const theme = localStorage.getItem('starlight-theme') ||
+    (window.matchMedia('(prefers-color-scheme: light)')
+      .matches ? 'light' : 'dark');
+  document.documentElement
+    .setAttribute('data-theme', theme);
+})();
+```
+
+---
+
+## CSS変数
+
+### ダークテーマ（デフォルト）
+
+```css
+:root {
+  --r-background-color: #0a0a0a;
+  --r-main-color: #b4b4b4;
+  --r-heading-color: #fff;
+}
+```
+
+---
+
+### ライトテーマ
+
+```css
+[data-theme='light'] {
+  --r-background-color: #f8f9fa;
+  --r-main-color: #333;
+  --r-heading-color: #111;
+}
+```
+
+---
+
+## reveal.jsとの統合
+
+reveal.jsのblack.cssテーマを読み込みつつ、CSS変数で色を上書き。
+
+これによりレイアウトは維持しながら、配色のみカスタマイズ。
+
+---
+
+## 注意点
+
+reveal.jsのCSSは詳細度が高いため、一部のスタイルは上書きが困難。
+
+- `text-transform: uppercase` - 見出しの大文字化
+- 一部のカラー指定
+
+これらは将来的に改善予定。

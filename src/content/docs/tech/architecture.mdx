@@ -1,0 +1,62 @@
+---
+title: アーキテクチャ
+description: Slidocの全体構成と技術選定
+---
+
+## 技術スタック
+
+Slidocは以下の技術で構成されています。
+
+---
+
+### フレームワーク
+
+#### Astro
+静的サイトジェネレーター。ビルド時にHTMLを生成し、高速なページ読み込みを実現。
+
+#### Starlight
+Astro公式のドキュメンテーションテーマ。サイドバー、検索、ダークモードを標準搭載。
+
+#### starlight-theme-next
+Next.js風のダークテーマプラグイン。モダンな外観を提供。
+
+---
+
+### プレゼンテーション
+
+#### reveal.js
+スライドプレゼンテーションフレームワーク。scroll viewモードでスクロール閲覧を実現。
+
+#### marked
+MarkdownをHTMLに変換するパーサー。スライド生成時に使用。
+
+---
+
+### コミュニケーション
+
+#### giscus
+GitHub Discussionsをバックエンドとするコメントシステム。認証不要で閲覧可能。
+
+---
+
+## ディレクトリ構成
+
+```
+slidoc/
+├── src/
+│   ├── content/docs/     # 記事ファイル
+│   ├── components/       # カスタムコンポーネント
+│   ├── pages/present/    # プレゼンモード
+│   └── styles/           # カスタムCSS
+├── astro.config.mjs      # Astro設定
+└── package.json
+```
+
+---
+
+## データフロー
+
+1. MDXファイルを`src/content/docs/`に配置
+2. Starlightがドキュメントページを生成
+3. `[...slug].astro`がスライドページを生成
+4. 同一コンテンツから2種類の出力を生成

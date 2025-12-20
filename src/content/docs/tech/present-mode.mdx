@@ -1,0 +1,81 @@
+---
+title: プレゼンモード
+description: reveal.js統合の仕組み
+---
+
+## 概要
+
+プレゼンモードは`src/pages/present/[...slug].astro`で実装されています。
+
+---
+
+## スライド生成の流れ
+
+1. MDXファイルを読み込み
+2. frontmatterを解析してタイトル・説明を取得
+3. `---`（水平線）でコンテンツを分割
+4. 各スライドをmarkedでHTMLに変換
+5. reveal.jsでレンダリング
+
+---
+
+## コード解説
+
+### getStaticPaths
+
+```typescript
+export async function getStaticPaths() {
+  const docsDir = path.join(process.cwd(), 'src/content/docs');
+  // ディレクトリを再帰的にスキャン
+  // .mdx/.mdファイルをスライドパスとして登録
+}
+```
+
+---
+
+### スライド分割
+
+```typescript
+// 水平線で分割
+const slides = body.split(/\n---\n/)
+  .map(slide => slide.trim())
+  .filter(s => s);
+```
+
+`---`の前後に空行が必要な理由はこの正規表現による。
+
+---
+
+## reveal.js設定
+
+```javascript
+Reveal.initialize({
+  hash: true,
+  view: 'scroll',
+  scrollProgress: 'auto',
+  scrollIndicators: true,
+  center: true,
+  plugins: [RevealHighlight]
+});
+```
+
+---
+
+### 主要オプション
+
+- `view: 'scroll'` - スクロールビューモード
+- `scrollProgress` - スクロール進捗表示
+- `scrollIndicators` - 位置インジケーター
+- `center` - 上下中央寄せ
+
+---
+
+## URL設計
+
+| ドキュメント | スライド |
+|-------------|---------|
+| `/about/` | `/present/about/` |
+| `/tech/example/` | `/present/tech/example/` |
+| `/tech/` | `/present/tech/index/` |
+
+カテゴリindexは特殊処理が必要。

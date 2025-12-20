@@ -59,12 +59,28 @@ body = body
   .replace(/<[A-Z][a-zA-Z]*[^>]*\/>/g, '')
   .trim();
 
-// Protect code blocks from slide splitting
+// Protect code blocks from slide splitting and math processing
 const codeBlockPlaceholder = '___CODE_BLOCK___';
 const codeBlocks: string[] = [];
 body = body.replace(/```[\s\S]*?```/g, (match) => {
   codeBlocks.push(match);
   return codeBlockPlaceholder + (codeBlocks.length - 1);
+});
+
+// Protect math expressions with placeholders (to avoid marked escaping them)
+const mathPlaceholder = '___MATH___';
+const mathExpressions: string[] = [];
+
+// Block math: $$...$$
+body = body.replace(/\$\$([\s\S]+?)\$\$/g, (_, math) => {
+  mathExpressions.push(`$$${math.trim()}$$`);
+  return mathPlaceholder + (mathExpressions.length - 1);
+});
+
+// Inline math: $...$
+body = body.replace(/\$([^$\n]+)\$/g, (_, math) => {
+  mathExpressions.push(`$${math.trim()}$`);
+  return mathPlaceholder + (mathExpressions.length - 1);
 });
 
 // Split by horizontal rule (---) - must be on its own line
@@ -81,12 +97,19 @@ slides = slides.map(slide => {
 console.log(`[Slidoc] ${slug}: ${slides.length} slides found`);
 
 // Convert each slide's markdown to HTML
-const slidesHtml = await Promise.all(
+let slidesHtml = await Promise.all(
   slides.map(async (slide) => {
     if (!slide) return '';
     return marked.parse(slide);
   })
 );
+
+// Restore math expressions after marked processing
+slidesHtml = slidesHtml.map(html => {
+  return html.replace(new RegExp(mathPlaceholder + '(\\d+)', 'g'), (_, index) => {
+    return mathExpressions[parseInt(index)];
+  });
+});
 
 const filteredSlidesHtml = slidesHtml.filter(html => html.trim());
 // tech/index -> /tech/, about -> /about/
@@ -104,6 +127,9 @@ const docUrl = `/${docSlug}/`;
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/theme/black.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/plugin/highlight/monokai.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
   <script is:inline>
     (function() {
       const theme = localStorage.getItem('starlight-theme') ||
@@ -213,6 +239,12 @@ const docUrl = `/${docSlug}/`;
       text-align: center;
       width: 100%;
     }
+    /* Block math alignment */
+    .katex-display {
+      display: block;
+      text-align: center;
+      margin: 1em 0;
+    }
   </style>
 </head>
 <body>
@@ -240,6 +272,19 @@ const docUrl = `/${docSlug}/`;
       scrollIndicators: true,
       center: true,
       plugins: [RevealHighlight]
+    });
+
+    // Render math with KaTeX after page load
+    document.addEventListener('DOMContentLoaded', function() {
+      if (typeof renderMathInElement !== 'undefined') {
+        renderMathInElement(document.body, {
+          delimiters: [
+            {left: '$$', right: '$$', display: true},
+            {left: '$', right: '$', display: false}
+          ],
+          throwOnError: false
+        });
+      }
     });
   </script>
 </body>

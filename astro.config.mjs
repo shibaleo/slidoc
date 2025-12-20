@@ -2,15 +2,21 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 import starlightThemeNext from 'starlight-theme-next';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 
 // https://astro.build/config
 export default defineConfig({
 	site: 'https://slidoc.vercel.app',
+	markdown: {
+		remarkPlugins: [remarkMath],
+		rehypePlugins: [rehypeKatex],
+	},
 	integrations: [
 		starlight({
 			plugins: [starlightThemeNext()],
 			title: 'Slidoc',
-			description: '考えを広めるためのドキュメント＆スライドサイト',
+			description: 'Slide Presentation And Web Page Documentation',
 			defaultLocale: 'root',
 			locales: {
 				root: {
@@ -32,6 +38,7 @@ export default defineConfig({
 						{ label: 'スライド記法', link: '/howto/slide-syntax/' },
 						{ label: 'カスタマイズ', link: '/howto/customization/' },
 						{ label: 'giscusの設定方法', link: '/howto/giscus-setup/' },
+						{ label: '数式の書き方', link: '/howto/math-example/' },
 						{ label: 'サンプル技術記事', link: '/howto/example/' },
 					],
 				},

@@ -245,6 +245,7 @@ const docUrl = `/${docSlug}/`;
       text-align: center;
       margin: 1em 0;
     }
+
   </style>
 </head>
 <body>
@@ -268,7 +269,7 @@ const docUrl = `/${docSlug}/`;
     Reveal.initialize({
       hash: true,
       view: 'scroll',
-      scrollProgress: 'auto',
+      scrollProgress: true,
       scrollIndicators: true,
       center: true,
       plugins: [RevealHighlight]
@@ -287,5 +288,15 @@ const docUrl = `/${docSlug}/`;
       }
     });
   </script>
+
+  <style is:inline>
+    /* reveal.js custom scrollbar color for light theme */
+    [data-theme='light'] .scrollbar-playhead {
+      background: rgba(0, 0, 0, 0.5) !important;
+    }
+    [data-theme='light'] .scrollbar-slide {
+      background: rgba(0, 0, 0, 0.15) !important;
+    }
+  </style>
 </body>
 </html>

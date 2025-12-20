@@ -1,0 +1,23 @@
+---
+import Default from '@astrojs/starlight/components/PageFrame.astro';
+import PresentFab from './PresentFab.astro';
+
+// URLからslugを取得
+const pathname = Astro.url.pathname;
+const slug = pathname.replace(/^\//, '').replace(/\/$/, '');
+
+// Starlightのpropsからentry情報を取得
+const { entry } = Astro.locals.starlightRoute as any;
+
+// splashテンプレートでは非表示
+const isSplash = entry?.data?.template === 'splash';
+const showFab = !isSplash;
+---
+
+<Default {...Astro.props}>
+  <slot name="header" slot="header" />
+  <slot name="sidebar" slot="sidebar" />
+  <slot />
+</Default>
+
+{showFab && <PresentFab slug={slug} />}

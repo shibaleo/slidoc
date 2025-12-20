@@ -11,8 +11,9 @@ const { title, slug } = Astro.props;
 const siteUrl = 'https://slidoc.vercel.app';
 const pageUrl = `${siteUrl}/${slug}/`;
 
-// カテゴリindexページの場合は /present/tech/index/ のようにする
-const isCategory = slug && !slug.includes('/');
+// カテゴリindexページ（howto, tech）の場合は /present/tech/index/ のようにする
+const categoryFolders = ['howto', 'tech'];
+const isCategory = categoryFolders.includes(slug);
 const presentSlug = isCategory ? `${slug}/index` : slug;
 const presentUrl = `/present/${presentSlug}/`;
 

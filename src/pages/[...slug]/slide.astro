@@ -2,6 +2,8 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { marked } from 'marked';
+import { getPageUrlFromSlide } from '../../utils/urls';
+import { isCategory } from '../../config/categories';
 
 export async function getStaticPaths() {
   const docsDir = path.join(process.cwd(), 'src/content/docs');
@@ -15,9 +17,14 @@ export async function getStaticPaths() {
       if (stat.isDirectory()) {
         scanDir(fullPath, prefix ? `${prefix}/${file}` : file);
       } else if (file.endsWith('.mdx') || file.endsWith('.md')) {
-        const slug = prefix ? `${prefix}/${file.replace(/\.(mdx?|md)$/, '')}` : file.replace(/\.(mdx?|md)$/, '');
+        const baseName = file.replace(/\.(mdx?|md)$/, '');
+        let slug = prefix ? `${prefix}/${baseName}` : baseName;
         // Skip root index only
         if (slug === 'index') continue;
+        // カテゴリindexは /howto/index ではなく /howto にする
+        if (baseName === 'index' && prefix) {
+          slug = prefix;
+        }
         paths.push({
           params: { slug },
           props: { filePath: fullPath, title: slug },
@@ -112,9 +119,9 @@ slidesHtml = slidesHtml.map(html => {
 });
 
 const filteredSlidesHtml = slidesHtml.filter(html => html.trim());
-// tech/index -> /tech/, about -> /about/
-const docSlug = slug.endsWith('/index') ? slug.replace(/\/index$/, '') : slug;
-const docUrl = `/${docSlug}/`;
+
+// 戻り先URLをユーティリティ関数で取得
+const docUrl = getPageUrlFromSlide(slug);
 ---
 
 <!DOCTYPE html>
@@ -122,7 +129,7 @@ const docUrl = `/${docSlug}/`;
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{title} - プレゼンモード | Slidoc</title>
+  <title>{title} - スライド | Slidoc</title>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reset.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/reveal.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.2.1/dist/theme/black.css">

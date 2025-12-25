@@ -1,6 +1,7 @@
 ---
 import ShareButtons from './ShareButtons.astro';
 import Giscus from './Giscus.astro';
+import { getFullUrl } from '../utils/urls';
 
 interface Props {
   title: string;
@@ -8,8 +9,7 @@ interface Props {
 }
 
 const { title, slug } = Astro.props;
-const siteUrl = 'https://slidoc.vercel.app';
-const pageUrl = `${siteUrl}/${slug}/`;
+const pageUrl = getFullUrl(slug);
 ---
 
 <div class="bottom-bar">

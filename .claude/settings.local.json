@@ -6,7 +6,11 @@
       "Bash(mkdir:*)",
       "Bash(npm run build:*)",
       "Bash(npx astro build)",
-      "Bash(npm install)"
+      "Bash(npm install)",
+      "Bash(dir \"c:\\\\Users\\\\shiba\\\\Documents\\\\slidoc\\\\node_modules\\\\@astrojs\\\\starlight\\\\components\")",
+      "Bash(git diff:*)",
+      "Bash(git stash push:*)",
+      "Bash(git add:*)"
     ]
   }
 }

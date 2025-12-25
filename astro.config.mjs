@@ -64,6 +64,7 @@ export default defineConfig({
 			components: {
 				MarkdownContent: './src/components/CustomMarkdownContent.astro',
 				PageFrame: './src/components/CustomPageFrame.astro',
+				Header: './src/components/CustomHeader.astro',
 			},
 		}),
 	],

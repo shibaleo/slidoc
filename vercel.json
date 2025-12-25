@@ -1,0 +1,9 @@
+{
+  "redirects": [
+    {
+      "source": "/present/:path*",
+      "destination": "/:path*/slide/",
+      "permanent": true
+    }
+  ]
+}

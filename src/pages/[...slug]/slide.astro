@@ -5,6 +5,20 @@ import { marked } from 'marked';
 import { getPageUrlFromSlide } from '../../utils/urls';
 import { isCategory } from '../../config/categories';
 
+// Configure marked to generate heading IDs (for anchor links)
+const renderer = new marked.Renderer();
+renderer.heading = function({ text, depth }) {
+  // Generate slug from heading text (similar to Starlight's behavior)
+  const slug = text
+    .toLowerCase()
+    .replace(/[^\w\s\u3040-\u309f\u30a0-\u30ff\u4e00-\u9faf-]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .replace(/^-|-$/g, '');
+  return `<h${depth} id="${slug}">${text}</h${depth}>`;
+};
+marked.use({ renderer });
+
 export async function getStaticPaths() {
   const docsDir = path.join(process.cwd(), 'src/content/docs');
   const paths: { params: { slug: string }; props: { filePath: string; title: string } }[] = [];
@@ -176,27 +190,44 @@ const docUrl = getPageUrlFromSlide(slug);
     }
     .back-button {
       position: fixed;
-      bottom: 24px;
-      right: 24px;
+      top: 24px;
+      left: 24px;
       z-index: 1000;
-      width: 48px;
-      height: 48px;
-      background: var(--btn-bg);
       color: var(--btn-color);
-      border-radius: 50%;
       text-decoration: none;
-      font-size: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid var(--btn-border);
-      transition: all 0.2s;
-      backdrop-filter: blur(8px);
+      transition: opacity 0.3s;
+      opacity: 0.7;
     }
     .back-button:hover {
-      background: var(--btn-bg-hover);
-      border-color: var(--btn-border-hover);
-      transform: scale(1.05);
+      opacity: 1;
+    }
+
+    /* Scroll hint arrow - reveal.js style bounce animation */
+    @keyframes bounce-down {
+      0%, 10%, 25%, 40%, 50% { transform: translateY(0); }
+      20% { transform: translateY(10px); }
+      30% { transform: translateY(-5px); }
+    }
+
+    .scroll-hint {
+      position: fixed;
+      bottom: 36px;
+      right: 36px;
+      z-index: 1000;
+      color: var(--btn-color);
+      cursor: pointer;
+      animation: bounce-down 2s ease-out infinite;
+      transition: opacity 0.3s;
+      opacity: 0.7;
+    }
+
+    .scroll-hint:hover {
+      opacity: 1;
+    }
+
+    .scroll-hint.hidden {
+      opacity: 0;
+      pointer-events: none;
     }
     .reveal-viewport {
       background: var(--r-background-color);
@@ -257,10 +288,16 @@ const docUrl = getPageUrlFromSlide(slug);
 </head>
 <body>
   <a href={docUrl} class="back-button" title="記事に戻る">
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor">
       <path d="M17.77 3.77 16 2 6 12l10 10 1.77-1.77L9.54 12z"/>
     </svg>
   </a>
+
+  <div class="scroll-hint" id="scrollHint">
+    <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="currentColor" style="transform: rotate(-90deg);">
+      <path d="M17.77 3.77 16 2 6 12l10 10 1.77-1.77L9.54 12z"/>
+    </svg>
+  </div>
 
   <div class="reveal">
     <div class="slides">
@@ -276,10 +313,11 @@ const docUrl = getPageUrlFromSlide(slug);
     Reveal.initialize({
       hash: true,
       view: 'scroll',
-      scrollProgress: true,
-      scrollIndicators: true,
+      scrollProgress: 'auto',
       center: true,
-      plugins: [RevealHighlight]
+      plugins: [RevealHighlight],
+      // Custom option: hide scroll hint after scroll/click
+      hideScrollHintAfterInteraction: false
     });
 
     // Render math with KaTeX after page load
@@ -294,6 +332,82 @@ const docUrl = getPageUrlFromSlide(slug);
         });
       }
     });
+
+    /**
+     * スクロールヒント矢印の動作:
+     * - クリックで次のスライドへ移動
+     * - 最後のスライドに到達したら非表示
+     * - 最後のスライド以外では再表示（hideScrollHintAfterInteraction: false の場合）
+     * - hideScrollHintAfterInteraction: true の場合、最初のスクロール/クリックで永久に非表示
+     */
+    (function() {
+      const scrollHint = document.getElementById('scrollHint');
+      const hideAfterInteraction = Reveal.getConfig().hideScrollHintAfterInteraction;
+      const totalSlides = Reveal.getTotalSlides();
+
+      function hideHint() {
+        scrollHint.classList.add('hidden');
+      }
+
+      function showHint() {
+        scrollHint.classList.remove('hidden');
+      }
+
+      function checkSlidePosition() {
+        const indices = Reveal.getIndices();
+        const isLastSlide = indices.h === totalSlides - 1;
+
+        if (isLastSlide) {
+          hideHint();
+        } else if (!hideAfterInteraction) {
+          showHint();
+        }
+      }
+
+      // Click to go to next slide
+      scrollHint.addEventListener('click', function() {
+        Reveal.next();
+        if (hideAfterInteraction) {
+          hideHint();
+        }
+      });
+
+      // Check on slide change
+      Reveal.on('slidechanged', checkSlidePosition);
+
+      // Initial check
+      checkSlidePosition();
+
+      /**
+       * 戻るボタンのアンカーリンク更新:
+       * - 現在のスライド内の最初の見出し(h1-h6)を検出
+       * - その見出しのIDをアンカーとして戻り先URLに追加
+       * - 見出しがない場合はベースURLのまま
+       */
+      const backButton = document.querySelector('.back-button');
+      const baseDocUrl = backButton?.getAttribute('href') || '/';
+
+      function updateBackButtonAnchor() {
+        const currentSlide = Reveal.getCurrentSlide();
+        if (!currentSlide || !backButton) return;
+
+        // 現在のスライド内の最初の見出しを検索
+        const heading = currentSlide.querySelector('h1, h2, h3, h4, h5, h6');
+        if (heading && heading.id) {
+          backButton.setAttribute('href', baseDocUrl + '#' + heading.id);
+        } else {
+          backButton.setAttribute('href', baseDocUrl);
+        }
+      }
+
+      Reveal.on('slidechanged', updateBackButtonAnchor);
+      updateBackButtonAnchor();
+
+      if (hideAfterInteraction) {
+        window.addEventListener('scroll', hideHint, { passive: true, once: true });
+        window.addEventListener('touchmove', hideHint, { passive: true, once: true });
+      }
+    })();
   </script>
 
   <style is:inline>
